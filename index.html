@@ -1012,14 +1012,13 @@ const MESSAGES_COLLECTION = "messages";
 /* ============================================
    EMAILJS CONFIG
 ============================================ */
-// ⚠️ REPLACE WITH YOUR EMAILJS PUBLIC KEY
 const EMAILJS_PUBLIC_KEY = "OL8vO0gNxPgRvvaa_";
 const EMAILJS_SERVICE_ID = "service_e64ymdf";
 const EMAILJS_TEMPLATE_ID = "template_2oetk1v";
 
 // Initialize EmailJS
 if (typeof emailjs !== 'undefined') {
-  emailjs.init({publicKey: OL8vO0gNxPgRvvaa_});
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 }
 
 /* ============================================
@@ -1169,7 +1168,6 @@ function generateTicketId() {
 
 /* ============================================
    FIRESTORE: REAL-TIME DATA SYNC
-   This fixes the save issue by using onSnapshot
 ============================================ */
 function subscribeToData() {
   if (dataUnsubscribe) dataUnsubscribe();
@@ -1201,7 +1199,6 @@ function subscribeToMessages() {
   messagesUnsubscribe = onSnapshot(q, (snap) => {
     messagesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     updateMessageBadge();
-    // If messages tab is open, re-render
     const activeTab = $('.admin-nav-item.active')?.dataset.tab;
     if (activeTab === 'messages') renderMessagesTab();
   }, (err) => {
@@ -1473,7 +1470,6 @@ $('#googleLoginBtn').addEventListener('click', async () => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     
-    // Check if email is allowed
     if (!ALLOWED_EMAILS.includes(user.email.toLowerCase())) {
       await signOut(auth);
       showStatus('⛔ Access denied. This Google account is not authorized.', 'error');
@@ -1504,7 +1500,6 @@ $('#adminLogout').addEventListener('click', async () => {
 
 $('#adminRefresh').addEventListener('click', async () => {
   showStatus('Refreshing data...', 'info');
-  // Real-time listeners will auto-update, but force reload
   try {
     const docRef = doc(db, ...DATA_DOC_PATH);
     const snap = await getDoc(docRef);
@@ -1522,7 +1517,6 @@ $('#adminRefresh').addEventListener('click', async () => {
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
   if (user) {
-    // Update admin UI
     $('#adminUserEmail').textContent = user.email;
     $('#adminUserName').textContent = user.displayName || 'Admin';
     const avatarImg = $('#adminUserAvatar');
@@ -1537,7 +1531,6 @@ onAuthStateChanged(auth, (user) => {
       showDashboard();
     }
     
-    // Subscribe to real-time data
     subscribeToData();
     subscribeToMessages();
   } else {
@@ -1931,7 +1924,6 @@ function renderMessagesTab() {
       list.appendChild(card);
     });
     
-    // Action handlers
     list.querySelectorAll('[data-action]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -1955,7 +1947,6 @@ function renderMessagesTab() {
     });
   }
   
-  // Filter handlers
   $$('.msg-filter-btn[data-filter]').forEach(btn => {
     btn.addEventListener('click', () => {
       currentMsgFilter = btn.dataset.filter;
@@ -1989,7 +1980,6 @@ async function saveData() {
     btn.innerHTML = '<div class="admin-spinner" style="width:16px;height:16px;border-width:2px;"></div><span>Saving...</span>';
     try {
       await setDoc(doc(db, ...DATA_DOC_PATH), siteData);
-      // applyDataToSite will be called by onSnapshot automatically
       showStatus('✓ Changes saved successfully!', 'success');
     } catch (err) {
       console.error('Save error:', err);
@@ -2017,7 +2007,6 @@ $('#contactForm').addEventListener('submit', async (e) => {
   const subject = $('#subject').value.trim();
   const message = $('#message').value.trim();
   
-  // Validation
   if (!name || !email || !subject || !message) {
     formStatus.style.color = '#ef4444';
     formStatus.textContent = '⚠️ Please fill in all fields';
@@ -2031,10 +2020,8 @@ $('#contactForm').addEventListener('submit', async (e) => {
     return;
   }
   
-  // Generate ticket ID
   const ticketId = generateTicketId();
   
-  // Disable button
   submitBtn.disabled = true;
   submitText.textContent = 'Sending...';
   submitIcon.style.display = 'none';
@@ -2050,7 +2037,7 @@ $('#contactForm').addEventListener('submit', async (e) => {
     });
     
     // 2. Send confirmation email via EmailJS
-    if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+    if (typeof emailjs !== 'undefined') {
       try {
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
           user_name: name,
@@ -2064,12 +2051,10 @@ $('#contactForm').addEventListener('submit', async (e) => {
       }
     }
     
-    // Success
     formStatus.style.color = '#22c55e';
     formStatus.innerHTML = `✓ Message sent successfully!<br/><small style="opacity:0.8;">Your Ticket ID: <strong>${ticketId}</strong><br/>A confirmation email has been sent to ${email}</small>`;
     form.reset();
     
-    // Reset after 6 seconds
     setTimeout(() => {
       formStatus.textContent = '';
       submitBtn.disabled = false;
@@ -2288,7 +2273,6 @@ window.addEventListener('load', () => {
   }, 800);
 });
 
-// Expose for debugging
 window.showStatus = showStatus;
 
 </script>
